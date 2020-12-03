@@ -1,5 +1,6 @@
 <?php
 /*
+    
     NOTES:
         - DO MUST RESPECT THE CLASS TOPICS
             - VARIABLES
@@ -14,8 +15,10 @@ namespace App\Entity;
 
 use App\Repository\UserRepository;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Security\Core\User\UserInterface;
 use Ramsey\Uuid\Doctrine\UuidGenerator;
+use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Validator\Constraints as Assert;
+
 
 /**
  * @ORM\Entity(repositoryClass=UserRepository::class)
@@ -29,11 +32,13 @@ class User implements UserInterface
 
     /**
      * @ORM\Column(type="string", length=180, unique=true)
+     * @Assert\Email(message = "The email '{{ value }}' is not a valid email.")
      */
     private $email;
 
     /**
      * @ORM\Column(type="string", length=255)
+     * 
      */
     private $first_name;
 
@@ -62,6 +67,12 @@ class User implements UserInterface
      * @ORM\Column(type="json")
      */
     private $roles = [];
+
+    /**
+     * @ORM\Column(type="string", length=255, nullable=true)
+     * permit to now if the user is connected or not (if token = null; user disconnected )
+     */
+    private $token;
 
 
     /***************
@@ -108,6 +119,11 @@ class User implements UserInterface
         return array_unique($roles);
     }
 
+    public function getToken(): ?string
+    {
+        return $this->token;
+    }
+
     /***************
      *** SETTERS ***
      **************/
@@ -147,6 +163,13 @@ class User implements UserInterface
         return $this;
     }
 
+    public function setToken(string $token): self
+    {
+        $this->token = $token;
+
+        return $this;
+    }
+
     /***************
      *** METHODS ***
      **************/
@@ -158,6 +181,26 @@ class User implements UserInterface
     {
         // If you store any temporary, sensitive data on the user, clear it here
         // $this->plainPassword = null;
+    }
+
+    /*
+    * Erase token usefull for logout
+    */
+    public function eraseToken(): self
+    {
+        $this->token = null;
+
+        return $this;
+    }
+
+    /*
+    * generate random token usefull for login 
+    */
+    public function generateToken(): self
+    {
+        $this->token = bin2hex(random_bytes(60));
+
+        return $this;
     }
 
     /**
